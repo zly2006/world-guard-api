@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "worldguard",
+  "version": "${version}",
+
+  "name": "World Guard",
+  "description": "Common api for processing world change events",
+  "authors": [
+    "zly2006"
+  ],
+  "contact": {},
+
+  "license": "All-Rights-Reserved",
+  "icon": "icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.github.zly2006.worldguard.fabric.WorldGuardFabric"
+    ]
+  },
+  "mixins": [
+    "worldguard.mixins.json",
+    "worldguard-common.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.13",
+    "minecraft": ">=1.19.2"
+  }
+}
