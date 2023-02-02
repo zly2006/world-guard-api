@@ -34,7 +34,6 @@ public class MixinBucketItem {
             if (!Instance.checkPermission(world, blockPos, player, permission) ||
                     !Instance.checkPermission(world, blockPos2, player, permission)) {
                 player.currentScreenHandler.syncState();
-                player.sendMessage(permission.getNoPermissionMes(player));
                 cir.setReturnValue(TypedActionResult.fail(itemStack));
             }
         }

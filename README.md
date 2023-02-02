@@ -8,5 +8,5 @@
 
 This mod is incompatible with the following mods:
 
-* [carpet](): `optimizedTNT` will break the explosion protection behavior of WorldGuard.
+* [carpet](https://github.com/gnembon/fabric-carpet): `optimizedTNT` will break the explosion protection behavior of WorldGuard.
 

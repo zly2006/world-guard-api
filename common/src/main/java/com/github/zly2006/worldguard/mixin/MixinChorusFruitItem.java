@@ -21,10 +21,9 @@ public class MixinChorusFruitItem {
     @Inject(method = "finishUsing", locals = LocalCapture.CAPTURE_FAILSOFT, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;teleport(DDDZ)Z"), cancellable = true)
     private void tp(ItemStack stack, World world, LivingEntity user, CallbackInfoReturnable<ItemStack> cir, ItemStack itemStack, double d, double e, double f, int i, double g, double h, double j, Vec3d vec3d) {
         if (user instanceof ServerPlayerEntity player) {
-            BlockPos pos = new BlockPos(g, h, j);
-            if (!ServerMain.Instance.checkPermission(player, CHORUS_TP, pos)) {
-                player.sendMessage(CHORUS_TP.getNoPermissionMes(player));
-                cir.setReturnValue(stack);
+            if (WorldGuardDispatcher.shouldPrevent(new ChorusFruitTpEvent(player, new Vec3d(d, e, f), new Vec3d(d, e, f)))) {
+                player.currentScreenHandler.syncState();
+                cir.setReturnValue(itemStack);
             }
         }
     }

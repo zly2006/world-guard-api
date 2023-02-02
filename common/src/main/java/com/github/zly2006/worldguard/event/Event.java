@@ -7,9 +7,9 @@ import org.jetbrains.annotations.Nullable;
 public abstract class Event {
     boolean cancelled = false;
     boolean cancellable = true;
-    final private @Nullable ServerPlayerEntity player;
+    final protected @Nullable ServerPlayerEntity player;
 
-    final private @Nullable BlockPos pos;
+    final protected @Nullable BlockPos pos;
 
     protected Event(@Nullable ServerPlayerEntity player, @Nullable BlockPos pos) {
         this.player = player;

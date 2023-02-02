@@ -27,33 +27,21 @@ import static net.minecraft.block.CampfireBlock.WATERLOGGED;
 
 @Mixin(CampfireBlock.class)
 public class MixinCampfireBlock {
-
-    @Shadow @Final public static BooleanProperty LIT;
-
     @Inject(at = @At("HEAD"), method = "extinguish", cancellable = true)
-    private static void onExtinguish(Entity entity, WorldAccess world, BlockPos pos, BlockState state, CallbackInfo ci){
-        if(world instanceof ServerWorld){
-            EnclosureList list = ServerMain.Instance.getAllEnclosures((ServerWorld) world);
-            EnclosureArea area = list.getArea(pos);
-            if (area != null && !area.areaOf(pos).hasPubPerm(Permission.USE_CAMPFIRE)) {
-                if(entity instanceof ServerPlayerEntity player){
-                    player.sendMessage(USE_CAMPFIRE.getNoPermissionMes(player));
+    private static void onExtinguish(Entity entity, WorldAccess world, BlockPos pos, BlockState state, CallbackInfo ci) {
+        if (world instanceof ServerWorld serverWorld) {
+            if (entity instanceof ServerPlayerEntity player) {
+                if (WorldGuardDispatcher.shouldPrevent(new ExtinguishCampfireEvent(player, pos, serverWorld))) {
+                    ci.cancel();
                 }
-
-                world.setBlockState(pos, state.with(WATERLOGGED, false).with(LIT, true), 252);
-                world.emitGameEvent(entity, GameEvent.BLOCK_CHANGE, pos);
-
-                ci.cancel();
             }
         }
     }
 
     @Inject(at = @At("HEAD"), method = "tryFillWithFluid", cancellable = true)
-    private void onFillWithFluid(WorldAccess world, BlockPos pos, BlockState state, FluidState fluidState, CallbackInfoReturnable<Boolean> cir){
-        if(world instanceof ServerWorld){
-            EnclosureList list = ServerMain.Instance.getAllEnclosures((ServerWorld) world);
-            EnclosureArea area = list.getArea(pos);
-            if (area != null && !area.areaOf(pos).hasPubPerm(Permission.USE_CAMPFIRE)) {
+    private void onFillWithFluid(WorldAccess world, BlockPos pos, BlockState state, FluidState fluidState, CallbackInfoReturnable<Boolean> cir) {
+        if (world instanceof ServerWorld serverWorld) {
+            if (WorldGuardDispatcher.shouldPrevent(new ExtinguishCampfireEvent(null, pos, serverWorld))) {
                 cir.setReturnValue(false);
             }
         }

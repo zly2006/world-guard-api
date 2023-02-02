@@ -20,7 +20,7 @@ import static com.github.zly2006.enclosure.ServerMain.Instance;
 
 @Mixin(LecternScreenHandler.class)
 public abstract class MixinLecternScreenHandler extends ScreenHandler {
-    @Shadow @Final private Inventory inventory;
+    @Shadow public abstract ItemStack getBookItem();
 
     protected MixinLecternScreenHandler(@Nullable ScreenHandlerType<?> type, int syncId) {
         super(type, syncId);
@@ -33,7 +33,6 @@ public abstract class MixinLecternScreenHandler extends ScreenHandler {
                 if (id == 3) {
                     cir.setReturnValue(false);
                     serverPlayer.closeHandledScreen();
-                    serverPlayer.sendMessage(Permission.TAKE_BOOK.getNoPermissionMes(serverPlayer));
                 }
             }
         }

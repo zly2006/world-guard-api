@@ -18,9 +18,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import static com.github.zly2006.enclosure.ServerMain.Instance;
-import static com.github.zly2006.enclosure.utils.Permission.BREAK_BLOCK;
-
 @Mixin(ServerPlayerInteractionManager.class)
 public class MixinServerPlayerInteractionManager {
     @Shadow @Final protected ServerPlayerEntity player;
@@ -36,7 +33,6 @@ public class MixinServerPlayerInteractionManager {
                 for (Direction dir : Direction.values())
                     player.networkHandler.sendPacket(new BlockUpdateS2CPacket(world, pos.offset(dir)));
                 player.networkHandler.sendPacket(BlockEntityUpdateS2CPacket.create(entity, BlockEntity::createNbt));
-                player.sendMessage(BREAK_BLOCK.getNoPermissionMes(player));
                 cir.setReturnValue(true);
             }
         }

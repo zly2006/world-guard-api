@@ -1,6 +1,6 @@
 package com.github.zly2006.worldguard.mixin;
 
-import com.github.zly2006.enclosure.access.LecternInventoryAccess;
+import com.github.zly2006.worldguard.access.LecternInventoryAccess;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.LecternBlockEntity;
 import net.minecraft.inventory.Inventory;

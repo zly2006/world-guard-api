@@ -1,13 +1,15 @@
 package com.github.zly2006.worldguard.mixin;
 
-import com.github.zly2006.enclosure.EnclosureArea;
-import com.github.zly2006.enclosure.utils.Permission;
+import com.github.zly2006.worldguard.WorldGuardDispatcher;
+import com.github.zly2006.worldguard.event.GetOnVehicleEvent;
+import com.github.zly2006.worldguard.event.OpenContainerEvent;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.RideableInventory;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.entity.vehicle.ChestBoatEntity;
+import net.minecraft.entity.vehicle.VehicleInventory;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
@@ -15,10 +17,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import static com.github.zly2006.enclosure.ServerMain.Instance;
-import static com.github.zly2006.enclosure.utils.Permission.CONTAINER;
-import static com.github.zly2006.enclosure.utils.Permission.VEHICLE;
 
 @Mixin(ChestBoatEntity.class)
 public class MixinChestBoatEntity extends BoatEntity {
@@ -29,13 +27,10 @@ public class MixinChestBoatEntity extends BoatEntity {
     @Inject(method = "canPlayerUse", at = @At("HEAD"), cancellable = true)
     private void canPlayerUse(PlayerEntity player, CallbackInfoReturnable<Boolean> cir) {
         if (player instanceof ServerPlayerEntity serverPlayer) {
-            EnclosureArea area = Instance.getAllEnclosures((ServerWorld) this.getWorld()).getArea(getBlockPos());
-            if (area != null && !area.areaOf(getBlockPos()).hasPerm(serverPlayer, Permission.CONTAINER)) {
-                serverPlayer.sendMessage(CONTAINER.getNoPermissionMes(serverPlayer));
+            if (WorldGuardDispatcher.shouldPrevent(new OpenContainerEvent(serverPlayer, this.getBlockPos(), serverPlayer.getWorld(), this, null))) {
                 cir.setReturnValue(false);
             }
-            if (area != null && !area.areaOf(getBlockPos()).hasPerm(serverPlayer, Permission.VEHICLE)) {
-                serverPlayer.sendMessage(VEHICLE.getNoPermissionMes(serverPlayer));
+            if (WorldGuardDispatcher.shouldPrevent(new GetOnVehicleEvent(serverPlayer, this.getBlockPos(), this))) {
                 cir.setReturnValue(false);
             }
         }
@@ -43,13 +38,13 @@ public class MixinChestBoatEntity extends BoatEntity {
 
     @Inject(method = "interact", at = @At("HEAD"), cancellable = true)
     private void onInteract(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        if (!Instance.checkPermission(getWorld(), getBlockPos(), player, VEHICLE)) {
-            player.sendMessage(VEHICLE.getNoPermissionMes(player));
-            cir.setReturnValue(ActionResult.FAIL);
-        }
-        if (!Instance.checkPermission(getWorld(), getBlockPos(), player, CONTAINER)) {
-            player.sendMessage(CONTAINER.getNoPermissionMes(player));
-            cir.setReturnValue(ActionResult.FAIL);
+        if (player instanceof ServerPlayerEntity serverPlayer) {
+            if (WorldGuardDispatcher.shouldPrevent(new OpenContainerEvent(serverPlayer, this.getBlockPos(), serverPlayer.getWorld(), this, null))) {
+                cir.setReturnValue(ActionResult.FAIL);
+            }
+            if (WorldGuardDispatcher.shouldPrevent(new GetOnVehicleEvent(serverPlayer, this.getBlockPos(), this))) {
+                cir.setReturnValue(ActionResult.FAIL);
+            }
         }
     }
 }

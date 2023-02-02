@@ -30,7 +30,7 @@ public abstract class MixinAbstractMinecartEntity extends Entity {
         if (this.world.isClient) {
             return;
         }
-        if (WorldGuardDispatcher.shouldPrevent(new BreakVehicleEvent(player, this.getBlockPos(), this))) {
+        if (WorldGuardDispatcher.shouldPrevent(new BreakVehicleEvent(player, this.getBlockPos(), this, source))) {
             cir.setReturnValue(false);
         }
     }

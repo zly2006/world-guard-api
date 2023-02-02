@@ -1,8 +1,5 @@
 package com.github.zly2006.worldguard.mixin;
 
-import com.github.zly2006.enclosure.EnclosureArea;
-import com.github.zly2006.enclosure.EnclosureList;
-import com.github.zly2006.enclosure.utils.Permission;
 import com.github.zly2006.worldguard.WorldGuardDispatcher;
 import com.github.zly2006.worldguard.event.SpawnWitherEvent;
 import net.minecraft.block.WitherSkullBlock;
@@ -13,8 +10,6 @@ import net.minecraft.world.WorldView;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
-
-import static com.github.zly2006.enclosure.ServerMain.Instance;
 
 @Mixin(WitherSkullBlock.class)
 public class MixinWitherSkullBlock {

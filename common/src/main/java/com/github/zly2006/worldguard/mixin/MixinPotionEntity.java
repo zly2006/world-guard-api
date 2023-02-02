@@ -34,6 +34,12 @@ public abstract class MixinPotionEntity extends ThrownItemEntity {
             return;
         }
         Block block = world.getBlockState(pos).getBlock();
+        ServerPlayerEntity player;
+        if (getOwner() instanceof ServerPlayerEntity) {
+            player = (ServerPlayerEntity) getOwner();
+        } else {
+            player = null;
+        }
         if (block instanceof CampfireBlock) {
             EnclosureList list = ServerMain.Instance.getAllEnclosures((ServerWorld) world);
             EnclosureArea area = list.getArea(pos);
