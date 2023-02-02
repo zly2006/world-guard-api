@@ -1,7 +1,7 @@
 package com.github.zly2006.worldguard.mixin;
 
-import com.github.zly2006.enclosure.EnclosureArea;
-import com.github.zly2006.enclosure.utils.Permission;
+import com.github.zly2006.worldguard.WorldGuardDispatcher;
+import com.github.zly2006.worldguard.event.OpenContainerEvent;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.AbstractMinecartEntity;
@@ -14,9 +14,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static com.github.zly2006.enclosure.ServerMain.Instance;
-import static com.github.zly2006.enclosure.utils.Permission.CONTAINER;
-
 @Mixin(StorageMinecartEntity.class)
 public abstract class MixinStorageMinecartEntity extends AbstractMinecartEntity {
     protected MixinStorageMinecartEntity(EntityType<?> entityType, World world) {
@@ -26,9 +23,7 @@ public abstract class MixinStorageMinecartEntity extends AbstractMinecartEntity 
     @Inject(method = "canPlayerUse", at = @At("HEAD"), cancellable = true)
     private void canPlayerUse(PlayerEntity player, CallbackInfoReturnable<Boolean> cir) {
         if (player instanceof ServerPlayerEntity serverPlayer) {
-            EnclosureArea area = Instance.getAllEnclosures((ServerWorld) this.getWorld()).getArea(getBlockPos());
-            if (area != null && !area.areaOf(getBlockPos()).hasPerm(serverPlayer, Permission.CONTAINER)) {
-                serverPlayer.sendMessage(CONTAINER.getNoPermissionMes(serverPlayer));
+            if (WorldGuardDispatcher.shouldPrevent(new OpenContainerEvent(serverPlayer, getBlockPos(), (ServerWorld) getWorld(), (StorageMinecartEntity) (Object) this, null))) {
                 cir.setReturnValue(false);
             }
         }

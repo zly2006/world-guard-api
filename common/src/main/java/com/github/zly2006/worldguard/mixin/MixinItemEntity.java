@@ -1,8 +1,7 @@
 package com.github.zly2006.worldguard.mixin;
 
-import com.github.zly2006.enclosure.EnclosureArea;
-import com.github.zly2006.enclosure.ServerMain;
-import com.github.zly2006.enclosure.utils.Permission;
+import com.github.zly2006.worldguard.WorldGuardDispatcher;
+import com.github.zly2006.worldguard.event.PickupItemEvent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ItemEntity;
@@ -23,9 +22,8 @@ public abstract class MixinItemEntity extends Entity {
 
     @Inject(method = "onPlayerCollision", at = @At("HEAD"), cancellable = true)
     private void onPlayerCollision(PlayerEntity player, CallbackInfo ci) {
-        if (world instanceof ServerWorld serverWorld) {
-            EnclosureArea area = ServerMain.Instance.getAllEnclosures(serverWorld).getArea(getBlockPos());
-            if (area != null && !area.areaOf(getBlockPos()).hasPerm((ServerPlayerEntity) player, Permission.PICKUP_ITEM)) {
+        if (world instanceof ServerWorld serverWorld && player instanceof ServerPlayerEntity) {
+            if (WorldGuardDispatcher.shouldPrevent(new PickupItemEvent((ServerPlayerEntity) player, getBlockPos(), (ItemEntity) (Object) this))) {
                 ci.cancel();
             }
         }

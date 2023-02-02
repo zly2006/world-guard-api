@@ -1,9 +1,9 @@
 package com.github.zly2006.worldguard.mixin;
 
-import com.github.zly2006.enclosure.utils.Permission;
+import com.github.zly2006.worldguard.WorldGuardDispatcher;
+import com.github.zly2006.worldguard.event.PlaceBlockEvent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.fluid.Fluid;
-import net.minecraft.fluid.Fluids;
 import net.minecraft.item.BucketItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -21,8 +21,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
-import static com.github.zly2006.enclosure.ServerMain.Instance;
-
 @Mixin(BucketItem.class)
 public class MixinBucketItem {
     @Shadow @Final private Fluid fluid;
@@ -30,9 +28,7 @@ public class MixinBucketItem {
     @Inject(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;canPlayerModifyAt(Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/math/BlockPos;)Z"), locals = LocalCapture.CAPTURE_FAILSOFT, cancellable = true)
     private void onUse(World world, PlayerEntity user, Hand hand, CallbackInfoReturnable<TypedActionResult<ItemStack>> cir, ItemStack itemStack, BlockHitResult blockHitResult, BlockPos blockPos, Direction direction, BlockPos blockPos2) {
         if (user instanceof ServerPlayerEntity player) {
-            Permission permission = this.fluid == Fluids.EMPTY ? Permission.BREAK_BLOCK : Permission.PLACE_BLOCK;
-            if (!Instance.checkPermission(world, blockPos, player, permission) ||
-                    !Instance.checkPermission(world, blockPos2, player, permission)) {
+            if (WorldGuardDispatcher.shouldPrevent(new PlaceBlockEvent(player, player.getBlockPos(), itemStack))) {
                 player.currentScreenHandler.syncState();
                 cir.setReturnValue(TypedActionResult.fail(itemStack));
             }

@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ChestBoatEntity.class)
-public class MixinChestBoatEntity extends BoatEntity {
+public abstract class MixinChestBoatEntity extends BoatEntity implements RideableInventory, VehicleInventory {
     public MixinChestBoatEntity(EntityType<? extends BoatEntity> entityType, World world) {
         super(entityType, world);
     }

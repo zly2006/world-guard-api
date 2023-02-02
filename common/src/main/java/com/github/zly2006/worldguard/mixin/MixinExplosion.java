@@ -1,11 +1,9 @@
 package com.github.zly2006.worldguard.mixin;
 
-import com.github.zly2006.enclosure.EnclosureArea;
-import com.github.zly2006.enclosure.EnclosureList;
-import com.github.zly2006.enclosure.utils.Permission;
+import com.github.zly2006.worldguard.WorldGuardDispatcher;
+import com.github.zly2006.worldguard.event.ExplosionEvent;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.entity.Entity;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
@@ -17,8 +15,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 import java.util.List;
-
-import static com.github.zly2006.enclosure.ServerMain.Instance;
 
 @Mixin(Explosion.class)
 public abstract class MixinExplosion {
@@ -35,17 +31,17 @@ public abstract class MixinExplosion {
     @ModifyVariable(at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;<init>(DDD)V", ordinal = 1), method = "collectBlocksAndDamageEntities")
     private List<Entity> protectEntities(List<Entity> list) {
         if (!world.isClient) {
-            EnclosureList enclosureList = Instance.getAllEnclosures((ServerWorld) world);
-            list.removeIf(e -> {
-                assert e != null;
-                BlockPos pos = e.getBlockPos();
-                EnclosureArea a = enclosureList.getArea(pos);
-                return a != null && !a.areaOf(pos).hasPubPerm(Permission.EXPLOSION);
-            });
-            this.affectedBlocks.removeIf(pos -> {
-                EnclosureArea a = enclosureList.getArea(pos);
-                return a != null && !a.areaOf(pos).hasPubPerm(Permission.EXPLOSION);
-            });
+            BlockPos pos;
+            if (this.entity != null) {
+                pos = this.entity.getBlockPos();
+            }
+            else {
+                pos = this.world.getSpawnPos();
+            }
+            if (WorldGuardDispatcher.shouldPrevent(new ExplosionEvent(pos, (Explosion) (Object) this))) {
+                affectedBlocks.clear();
+                return List.of();
+            }
         }
         return list;
     }

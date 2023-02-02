@@ -1,5 +1,7 @@
 package com.github.zly2006.worldguard.mixin;
 
+import com.github.zly2006.worldguard.WorldGuardDispatcher;
+import com.github.zly2006.worldguard.event.BreakBlockEvent;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
@@ -27,7 +29,7 @@ public class MixinServerPlayerInteractionManager {
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;onBreak(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/entity/player/PlayerEntity;)V"), method = "tryBreakBlock", locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
     private void breakBlock(BlockPos pos, CallbackInfoReturnable<Boolean> cir, BlockState state, BlockEntity entity, Block block) {
         if (entity != null) {
-            if (!Instance.checkPermission(player, BREAK_BLOCK, pos)) {
+            if (WorldGuardDispatcher.shouldPrevent(new BreakBlockEvent(player, world, pos))) {
                 player.playerScreenHandler.syncState();
                 player.networkHandler.sendPacket(new BlockUpdateS2CPacket(world, pos));
                 for (Direction dir : Direction.values())

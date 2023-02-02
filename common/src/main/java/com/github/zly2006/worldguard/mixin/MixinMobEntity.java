@@ -1,6 +1,8 @@
 package com.github.zly2006.worldguard.mixin;
 
-import com.github.zly2006.enclosure.utils.Permission;
+import com.github.zly2006.worldguard.WorldGuardDispatcher;
+import com.github.zly2006.worldguard.event.FishEvent;
+import com.github.zly2006.worldguard.event.LeashEvent;
 import net.minecraft.entity.Bucketable;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -17,8 +19,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static com.github.zly2006.enclosure.ServerMain.Instance;
-
 @Mixin(MobEntity.class)
 public abstract class MixinMobEntity extends LivingEntity {
     protected MixinMobEntity(EntityType<? extends LivingEntity> entityType, World world) {
@@ -27,8 +27,8 @@ public abstract class MixinMobEntity extends LivingEntity {
 
     @Inject(method = "interact", at = @At("HEAD"), cancellable = true)
     private void interact(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        if (this instanceof Bucketable && player.getStackInHand(hand).isOf(Items.WATER_BUCKET)) {
-            if (!Instance.checkPermission(getWorld(), getBlockPos(), player, Permission.FISH)) {
+        if (this instanceof Bucketable && player instanceof ServerPlayerEntity serverPlayerEntity && player.getStackInHand(hand).isOf(Items.WATER_BUCKET)) {
+            if (WorldGuardDispatcher.shouldPrevent(new FishEvent(serverPlayerEntity, player.getBlockPos()))) {
                 ServerPlayerEntity serverPlayer = (ServerPlayerEntity) player;
                 serverPlayer.networkHandler.sendPacket(createSpawnPacket());
                 serverPlayer.currentScreenHandler.syncState();
@@ -39,12 +39,13 @@ public abstract class MixinMobEntity extends LivingEntity {
 
     @Inject(method = "canBeLeashedBy", at = @At("HEAD"), cancellable = true)
     private void canBeLeashedBy(PlayerEntity player, CallbackInfoReturnable<Boolean> cir) {
-        if (!Instance.checkPermission(getWorld(), getBlockPos(), player, Permission.LEASH)) {
-            ServerPlayerEntity serverPlayer = (ServerPlayerEntity) player;
-            serverPlayer.networkHandler.sendPacket(new EntityAttachS2CPacket(this, null));
-            serverPlayer.sendMessage(Permission.LEASH.getNoPermissionMes(player));
-            serverPlayer.currentScreenHandler.syncState();
-            cir.setReturnValue(false);
+        if (player instanceof ServerPlayerEntity serverPlayerEntity) {
+            if (WorldGuardDispatcher.shouldPrevent(new LeashEvent(serverPlayerEntity, player.getBlockPos()))) {
+                ServerPlayerEntity serverPlayer = (ServerPlayerEntity) player;
+                serverPlayer.networkHandler.sendPacket(new EntityAttachS2CPacket(this, null));
+                serverPlayer.currentScreenHandler.syncState();
+                cir.setReturnValue(false);
+            }
         }
     }
 }

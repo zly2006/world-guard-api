@@ -1,9 +1,7 @@
 package com.github.zly2006.worldguard.mixin;
 
-import com.github.zly2006.enclosure.EnclosureArea;
-import com.github.zly2006.enclosure.EnclosureList;
-import com.github.zly2006.enclosure.ServerMain;
-import com.github.zly2006.enclosure.utils.Permission;
+import com.github.zly2006.worldguard.WorldGuardDispatcher;
+import com.github.zly2006.worldguard.event.FireSpreadEvent;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -22,20 +20,15 @@ import static net.fabricmc.api.EnvType.SERVER;
 public class MixinFireBlock {
     private void set(World instance, BlockPos pos, BlockState blockState, int i) {
         if (instance.isClient) return;
-        EnclosureList list = ServerMain.Instance.getAllEnclosures((ServerWorld) instance);
-        EnclosureArea area = list.getArea(pos);
-        if (area == null || area.areaOf(pos).hasPubPerm(Permission.FIRE_SPREADING)) {
-            instance.setBlockState(pos, blockState, i);
-        }
+        if (WorldGuardDispatcher.shouldPrevent(new FireSpreadEvent(pos))) return;
+        instance.setBlockState(pos, blockState, i);
     }
 
     private void remove(World instance, BlockPos pos, boolean move) {
         if (instance.isClient) return;
-        EnclosureList list = ServerMain.Instance.getAllEnclosures((ServerWorld) instance);
-        EnclosureArea area = list.getArea(pos);
-        if (area != null && !area.areaOf(pos).hasPubPerm(Permission.FIRE_SPREADING)) {
+
+        if (WorldGuardDispatcher.shouldPrevent(new FireSpreadEvent(pos))) {
             if (instance.getBlockState(pos).isOf(Blocks.FIRE)) {
-                // 但是允许火熄灭
                 instance.removeBlock(pos, move);
             }
         } else {

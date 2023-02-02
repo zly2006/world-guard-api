@@ -1,6 +1,7 @@
 package com.github.zly2006.worldguard.mixin;
 
-import com.github.zly2006.enclosure.utils.Utils;
+import com.github.zly2006.worldguard.WorldGuardDispatcher;
+import com.github.zly2006.worldguard.event.DamageEvent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -10,8 +11,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import static com.github.zly2006.enclosure.utils.Permission.*;
 
 @Mixin(LivingEntity.class)
 public abstract class MixinLivingEntity extends Entity {
@@ -24,25 +23,8 @@ public abstract class MixinLivingEntity extends Entity {
         if (getWorld().isClient) {
             return;
         }
-        if (Utils.isAnimal(this)) {
-            if (!Utils.commonOnPlayerDamage(source, getBlockPos(), getWorld(), ATTACK_ANIMAL)) {
-                cir.setReturnValue(false);
-            }
-        }
-        else if (Utils.isMonster(this)) {
-            if (!Utils.commonOnPlayerDamage(source, getBlockPos(), getWorld(), ATTACK_MONSTER)) {
-                cir.setReturnValue(false);
-            }
-        }
-        else if (getType() == EntityType.VILLAGER) {
-            if (!Utils.commonOnPlayerDamage(source, getBlockPos(), getWorld(), ATTACK_VILLAGER)) {
-                cir.setReturnValue(false);
-            }
-        }
-        else {
-            if (!Utils.commonOnPlayerDamage(source, getBlockPos(), getWorld(), ATTACK_ENTITY)) {
-                cir.setReturnValue(false);
-            }
+        if (WorldGuardDispatcher.shouldPrevent(new DamageEvent(source, this, getBlockPos()))) {
+            cir.setReturnValue(false);
         }
     }
 }

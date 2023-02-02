@@ -1,6 +1,7 @@
 package com.github.zly2006.worldguard.mixin;
 
-import com.github.zly2006.enclosure.utils.Permission;
+import com.github.zly2006.worldguard.WorldGuardDispatcher;
+import com.github.zly2006.worldguard.event.PistonMoveEvent;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.FacingBlock;
@@ -17,7 +18,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static com.github.zly2006.enclosure.ServerMain.checkPermissionInDifferentEnclosure;
 import static net.fabricmc.api.EnvType.SERVER;
 
 @Environment(SERVER)
@@ -58,12 +58,12 @@ public class MixinPistonBlock extends FacingBlock {
                 // 活塞向内收
                 pistonPos = pos.offset(pistonDir.getOpposite(), 2);
             }
-            if (!checkPermissionInDifferentEnclosure((ServerWorld) world, pistonPos, newPos, Permission.PISTON)) {
+            if (WorldGuardDispatcher.shouldPrevent(new PistonMoveEvent(pistonPos, newPos))) {
                 serverWorld.getChunkManager().markForUpdate(pos);
                 serverWorld.getChunkManager().markForUpdate(newPos);
                 cir.setReturnValue(false);
             }
-            if (!checkPermissionInDifferentEnclosure(serverWorld, pos, newPos, Permission.PISTON)) {
+            if (WorldGuardDispatcher.shouldPrevent(new PistonMoveEvent(pos, newPos))) {
                 serverWorld.getChunkManager().markForUpdate(pos);
                 serverWorld.getChunkManager().markForUpdate(newPos);
                 cir.setReturnValue(false);

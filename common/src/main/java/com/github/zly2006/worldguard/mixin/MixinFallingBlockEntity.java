@@ -1,12 +1,12 @@
 package com.github.zly2006.worldguard.mixin;
 
-import com.github.zly2006.enclosure.utils.Permission;
+import com.github.zly2006.worldguard.WorldGuardDispatcher;
+import com.github.zly2006.worldguard.event.FallingBlockLandEvent;
 import net.fabricmc.api.Environment;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.FallingBlockEntity;
 import net.minecraft.entity.data.TrackedData;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Final;
@@ -16,8 +16,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static com.github.zly2006.enclosure.ServerMain.Instance;
-import static com.github.zly2006.enclosure.ServerMain.checkPermissionInDifferentEnclosure;
 import static net.fabricmc.api.EnvType.SERVER;
 
 @Environment(SERVER)
@@ -39,11 +37,7 @@ public abstract class MixinFallingBlockEntity extends Entity {
         if (world.isClient) {
             return;
         }
-        if (Instance.getAllEnclosures((ServerWorld) world).getArea(getBlockPos()) == null) {
-            // not in any residence, do nothing
-            return;
-        }
-        if (!checkPermissionInDifferentEnclosure((ServerWorld) world, getFallingBlockPos(), getBlockPos(), Permission.FALLING_BLOCK)) {
+        if (WorldGuardDispatcher.shouldPrevent(new FallingBlockLandEvent(getFallingBlockPos(), (FallingBlockEntity) (Object) this))) {
             discard();
             ci.cancel();
         }

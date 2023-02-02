@@ -1,22 +1,19 @@
 package com.github.zly2006.worldguard.mixin;
 
-import com.github.zly2006.enclosure.access.LecternInventoryAccess;
-import com.github.zly2006.enclosure.utils.Permission;
+import com.github.zly2006.worldguard.WorldGuardDispatcher;
+import com.github.zly2006.worldguard.event.LecternTakeBookEvent;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Inventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.screen.LecternScreenHandler;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import static com.github.zly2006.enclosure.ServerMain.Instance;
 
 @Mixin(LecternScreenHandler.class)
 public abstract class MixinLecternScreenHandler extends ScreenHandler {
@@ -28,9 +25,9 @@ public abstract class MixinLecternScreenHandler extends ScreenHandler {
 
     @Inject(method = "onButtonClick", at = @At("HEAD"), cancellable = true)
     private void onButtonClick(PlayerEntity player, int id, CallbackInfoReturnable<Boolean> cir) {
-        if (player instanceof ServerPlayerEntity serverPlayer && inventory instanceof LecternInventoryAccess access) {
-            if (!Instance.checkPermission(serverPlayer, Permission.TAKE_BOOK, access.getPos())) {
-                if (id == 3) {
+        if (player instanceof ServerPlayerEntity serverPlayer) {
+            if (id == 3) {
+                if (WorldGuardDispatcher.shouldPrevent(new LecternTakeBookEvent(serverPlayer, getBookItem(), player.getBlockPos()))) {
                     cir.setReturnValue(false);
                     serverPlayer.closeHandledScreen();
                 }

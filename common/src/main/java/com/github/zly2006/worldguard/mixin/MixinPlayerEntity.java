@@ -1,8 +1,8 @@
 package com.github.zly2006.worldguard.mixin;
 
-import com.github.zly2006.enclosure.ServerMain;
-import com.github.zly2006.enclosure.events.PlayerUseEntityEvent;
-import net.minecraft.command.argument.NumberRangeArgumentType;
+import com.github.zly2006.worldguard.WorldGuardDispatcher;
+import com.github.zly2006.worldguard.event.PlaceBlockEvent;
+import com.github.zly2006.worldguard.event.PlayerUseEntityEvent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -14,7 +14,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.stat.Stat;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
@@ -24,8 +23,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import static com.github.zly2006.enclosure.utils.Permission.PLACE_BLOCK;
 
 @Mixin(PlayerEntity.class)
 public abstract class MixinPlayerEntity extends LivingEntity {
@@ -45,12 +42,8 @@ public abstract class MixinPlayerEntity extends LivingEntity {
 
     @Inject(method = "interact", at = @At("HEAD"), cancellable = true)
     private void protectInteract(Entity entity, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        EntityHitResult hitResult = new EntityHitResult(entity);
-        NumberRangeArgumentType.floatRange();
-
-        ActionResult result = PlayerUseEntityEvent.onPlayerUseEntity(inventory.player, getWorld(), hand, entity, hitResult);
-        if (result != ActionResult.PASS) {
-            cir.setReturnValue(result);
+        if (WorldGuardDispatcher.shouldPrevent(new PlayerUseEntityEvent((ServerPlayerEntity) inventory.player, entity.getBlockPos(), hand, entity))) {
+            cir.setReturnValue(ActionResult.FAIL);
         }
     }
 
@@ -58,8 +51,7 @@ public abstract class MixinPlayerEntity extends LivingEntity {
     @Inject(method = "canPlaceOn", at = @At("HEAD"), cancellable = true)
     private void protectPlacing(BlockPos pos, Direction facing, ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
         if (((LivingEntity) this) instanceof ServerPlayerEntity serverPlayer) {
-            if (!ServerMain.Instance.checkPermission(serverPlayer, PLACE_BLOCK, pos)) {
-                serverPlayer.sendMessage(PLACE_BLOCK.getNoPermissionMes(serverPlayer));
+            if (WorldGuardDispatcher.shouldPrevent(new PlaceBlockEvent(serverPlayer, pos, serverPlayer.getStackInHand(getActiveHand())))) {
                 cir.setReturnValue(false);
             }
         }
