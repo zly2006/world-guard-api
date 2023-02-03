@@ -17,10 +17,13 @@ public class WorldGuardDispatcher {
     }
 
     public static ActionResult dispatch(Event event) {
-        for (Pair<EventListener<?>, Integer> listener : listeners.get(event.getClass())) {
-            ActionResult result = listener.getLeft().onDispatch(event);
-            if (result != ActionResult.PASS) {
-                return result;
+        List<Pair<EventListener<?>, Integer>> list = listeners.get(event.getClass());
+        if (list != null) {
+            for (Pair<EventListener<?>, Integer> listener : list) {
+                ActionResult result = listener.getLeft().onDispatch(event);
+                if (result != ActionResult.PASS) {
+                    return result;
+                }
             }
         }
         return ActionResult.PASS;
